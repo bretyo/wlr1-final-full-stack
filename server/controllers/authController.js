@@ -40,5 +40,16 @@ module.exports = {
     req.session.destroy()
     res.sendStatus(200)
   },
-  getUser: (req, res) => {}
+  getUser: (req, res) => {
+    const db = req.app.get('db')
+    const {user} = req.session
+    if(!user){
+      return res.status(511).send('User not logged in')
+    }
+
+    db.cart.get_cart_items(user.cart_id)
+    .then(products=>{
+      res.status(200).send({user, products})
+    })
+  }
 }

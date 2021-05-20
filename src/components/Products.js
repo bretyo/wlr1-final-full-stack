@@ -1,9 +1,13 @@
 import {useState, useEffect} from 'react'
 import axios from 'axios'
-import {connect} from 'react-redux'
+import {useSelector, useDispatch} from 'react-redux'
+import {setCart} from '../redux/cartReducer'
 
 const Products = (props) => {
   const [products, setProducts] = useState([])
+  const {user} = useSelector(store=>store.auth)
+  const {cart} = useSelector(store=>store.cartReducer)
+  const dispatch = useDispatch();
 
   useEffect(() => {
     axios.get('/api/products')
@@ -14,12 +18,33 @@ const Products = (props) => {
   }, [])
 
   const handleAddToCart = (product_id) => {
-    axios.post(`/api/cart/${product_id}`)
-    .then(() => console.log('success!'))
-    .catch((err) => console.log(err))
+    const product = cart.find(product=>product.product_id === product_id)
+    if(!product){
+      axios.post(`/api/cart/${product_id}`)
+      .then((res) => dispatch(setCart(res.data)))
+      .catch((err) => {
+        if(err.response.status===511){
+          props.history.push('/auth')
+        }
+        console.log(err)
+      })
+
+    }
+    else{
+      axios.put(`/api/cart/${product_id}`, {quantity: product.quantity+1})
+      .then(res=>{
+        dispatch(setCart(res.data))
+      })
+      .catch((err) => {
+        if(err.response.status===511){
+          props.history.push('/auth')
+        }
+        console.log(err)
+      })
+
+    }
   }
 
-  console.log(props)
   return(
     <div>
       <h1>Products Page</h1>
@@ -28,7 +53,7 @@ const Products = (props) => {
           <div key={product.product_id}>
             <h4>{product.product_name}</h4>
             <p>{product.product_description}</p>
-            {props.user && <button onClick={() => handleAddToCart(product.product_id)}>Add To Cart</button>}
+            {user && <button onClick={() => handleAddToCart(product.product_id)}>Add To Cart</button>}
           </div>
         )
       })}
@@ -36,6 +61,5 @@ const Products = (props) => {
   )
 }
 
-const mapStateToProps = (store) => store.auth
 
-export default connect(mapStateToProps)(Products)
+export default Products

@@ -1,26 +1,35 @@
 import axios from 'axios'
 import {setUser} from '../redux/authReducer'
-import {connect} from 'react-redux'
+import {useDispatch} from 'react-redux'
 import {useState} from 'react'
+import { setCart } from '../redux/cartReducer'
 
 const Auth = (props) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const dispatch = useDispatch();
 
   const handleRegister=()=>{
     axios.post('/auth/register', {email,password})
     .then(res=>{
       console.log(res.data)
-      props.setUser(res.data)
-      props.history.push('/products') //make sure it's in the .then
+      dispatch(setUser(res.data))
+      axios.get('/api/cart')
+      .then(res=>{
+        dispatch(setCart(res.data))
+        props.history.push('/products') //make sure it's in the .then
+      })
     })
     .catch(err=>console.log(err))
   }
   const handleLogin=()=>{
     axios.post('/auth/login', {email,password})
     .then(res=>{
-      console.log(res.data)
-      props.setUser(res.data)
+      dispatch(setUser(res.data))
+      axios.get('/api/cart')
+      .then(res=>{
+        dispatch(setCart(res.data))
+      })
       props.history.push('/products')
     })
     .catch(err=>console.log(err))
@@ -37,4 +46,4 @@ const Auth = (props) => {
   )
 }
 
-export default connect(null, {setUser})(Auth);
+export default Auth;

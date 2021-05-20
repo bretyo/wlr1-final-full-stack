@@ -16,7 +16,6 @@ export function setUser(user){
 export default function authReducer(state=initialState, action){
     switch(action.type){
         case SET_USER:
-            console.log(action)
             return {...state, user: action.payload}
 
         default:
